@@ -2,22 +2,23 @@ from datetime import datetime
 
 from aiogoogle import Aiogoogle
 
-from app.core.config import settings
+from app.core.config import settings as s
 
 FORMAT = "%Y/%m/%d %H:%M:%S"
 
 
 async def spreadsheets_create(wrapper_services: Aiogoogle) -> str:
     now_date_time = datetime.now().strftime(FORMAT)
-    service = await wrapper_services.discover('sheets', 'v4')
+    service = await wrapper_services.discover('sheets', s.v_sheets)
     spreadsheet_body = {
         'properties': {'title': f'Отчет на {now_date_time}',
                        'locale': 'ru_RU'},
         'sheets': [{'properties': {'sheetType': 'GRID',
                                    'sheetId': 0,
-                                   'title': 'Лист1',
-                                   'gridProperties': {'rowCount': 100,
-                                                      'columnCount': 11}}}]
+                                   'title': s.list_title,
+                                   'gridProperties': {'rowCount': s.row,
+                                                      'columnCount': s.column}
+                                   }}]
     }
     response = await wrapper_services.as_service_account(
         service.spreadsheets.create(json=spreadsheet_body))
@@ -30,13 +31,13 @@ async def set_user_permissions(
 ) -> None:
     permissions_body = {'type': 'user',
                         'role': 'writer',
-                        'emailAddress': settings.email}
-    service = await wrapper_services.discover('drive', 'v3')
+                        'emailAddress': s.email}
+    service = await wrapper_services.discover('drive', s.v_drive)
     await wrapper_services.as_service_account(
         service.permissions.create(
             fileId=spreadsheetid,
             json=permissions_body,
-            fields="id"
+            fields='id'
         ))
 
 
@@ -46,7 +47,7 @@ async def spreadsheets_update_value(
         wrapper_services: Aiogoogle
 ) -> None:
     now_date_time = datetime.now().strftime(FORMAT)
-    service = await wrapper_services.discover('sheets', 'v4')
+    service = await wrapper_services.discover('sheets', s.v_sheets)
     table_values = [
         ['Отчет от', now_date_time],
         ['Топ проектов по скорости закрытия'],
